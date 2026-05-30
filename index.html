@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="Q版西游吞噬成长游戏：操控悟空吞噬小妖、收集道具、一路变强。"
+    />
+    <title>悟空吞天传</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="game-stage" aria-label="悟空吞天传游戏区域">
+        <div class="topbar" aria-live="polite">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true">悟</span>
+            <div>
+              <h1>悟空吞天传</h1>
+              <p>吞小妖，避强敌，借法宝翻盘</p>
+            </div>
+          </div>
+          <div class="stats" aria-label="游戏状态">
+            <div><span>分数</span><strong id="score">0</strong></div>
+            <div><span>等级</span><strong id="level">1</strong></div>
+            <div><span>生命</span><strong id="lives">3</strong></div>
+            <div><span>最高</span><strong id="best">0</strong></div>
+          </div>
+        </div>
+
+        <div id="game-root" class="game-root">
+          <div id="overlay" class="overlay">
+            <div class="overlay-panel">
+              <p class="kicker">Q版西游吞噬成长</p>
+              <h2 id="overlay-title">悟空出山</h2>
+              <p id="overlay-copy">
+                从花果山小猴开始，吞噬更弱的妖怪与灵气成长。别硬碰比你强的对手，法宝会帮你逆转局势。
+              </p>
+              <button id="primary-action" class="primary-action" type="button">开始游戏</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottombar">
+          <div id="powerups" class="powerups" aria-label="当前法宝"></div>
+          <div class="controls">
+            <button id="pause-button" type="button" aria-label="暂停或继续游戏">暂停</button>
+            <button id="restart-button" type="button" aria-label="重新开始游戏">重开</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./vendor/phaser.min.js"></script>
+    <script src="./src/game.js"></script>
+  </body>
+</html>
