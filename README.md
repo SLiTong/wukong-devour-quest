@@ -12,7 +12,7 @@ Q版西游题材 2D 吞噬成长游戏。操控悟空吞噬更弱的小妖和灵
 
 ## 本地运行
 
-静态文件可直接托管。推荐用本地 HTTP 服务打开：
+静态文件可直接托管。线上默认从 CDN 加载 Phaser，本地保留 `vendor/phaser.min.js` 作为兜底。推荐用本地 HTTP 服务打开：
 
 ```powershell
 python -m http.server 4173
