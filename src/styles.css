@@ -124,9 +124,9 @@ h1 {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(68px, 1fr));
+  grid-template-columns: repeat(6, minmax(66px, 1fr));
   gap: 8px;
-  width: min(460px, 50vw);
+  width: min(680px, 56vw);
 }
 
 .stats div {
@@ -222,6 +222,37 @@ h1 {
   gap: 8px;
   min-width: 0;
   overflow: hidden;
+}
+
+.mission {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 min(300px, 32%);
+  min-width: 190px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mission b {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--jade);
+  color: #fffaf0;
+  font-size: 12px;
 }
 
 .powerup {
@@ -348,7 +379,7 @@ h1 {
 
   .stats {
     width: 100%;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .stats div {
@@ -373,8 +404,16 @@ h1 {
     overflow-x: auto;
   }
 
+  .mission {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
   .controls button {
     flex: 1 1 0;
+    min-width: 0;
+    padding: 0 10px;
   }
 
   .overlay-panel h2 {

@@ -9,7 +9,7 @@
     />
     <title>悟空吞天传</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./src/styles.css" />
+    <link rel="stylesheet" href="./src/styles.css?v=20260601-enhanced" />
   </head>
   <body>
     <main class="app-shell">
@@ -26,6 +26,8 @@
             <div><span>分数</span><strong id="score">0</strong></div>
             <div><span>等级</span><strong id="level">1</strong></div>
             <div><span>生命</span><strong id="lives">3</strong></div>
+            <div><span>连吞</span><strong id="combo">x1</strong></div>
+            <div><span>冲刺</span><strong id="dash">就绪</strong></div>
             <div><span>最高</span><strong id="best">0</strong></div>
           </div>
         </div>
@@ -44,8 +46,10 @@
         </div>
 
         <div class="bottombar">
+          <div id="mission" class="mission" aria-label="当前任务"></div>
           <div id="powerups" class="powerups" aria-label="当前法宝"></div>
           <div class="controls">
+            <button id="audio-button" type="button" aria-label="开启或关闭音乐">音乐</button>
             <button id="pause-button" type="button" aria-label="暂停或继续游戏">暂停</button>
             <button id="restart-button" type="button" aria-label="重新开始游戏">重开</button>
           </div>
@@ -59,6 +63,6 @@
         document.write('<script src="./vendor/phaser.min.js"><\\/script>');
       }
     </script>
-    <script src="./src/game.js"></script>
+    <script src="./src/game.js?v=20260601-enhanced"></script>
   </body>
 </html>
