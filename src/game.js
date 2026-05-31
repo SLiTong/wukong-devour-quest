@@ -1287,13 +1287,18 @@
       const master = ctx.createGain();
       const music = ctx.createGain();
       const sfx = ctx.createGain();
-      master.gain.value = 0.5;
-      music.gain.value = 0.24;
-      sfx.gain.value = 0.46;
-      music.connect(master);
+      const musicFilter = ctx.createBiquadFilter();
+      musicFilter.type = "lowpass";
+      musicFilter.frequency.value = 4200;
+      musicFilter.Q.value = 0.8;
+      master.gain.value = 0.82;
+      music.gain.value = 0.56;
+      sfx.gain.value = 0.62;
+      music.connect(musicFilter);
+      musicFilter.connect(master);
       sfx.connect(master);
       master.connect(ctx.destination);
-      this.audio = { ctx, master, music, sfx, step: 0, timer: null };
+      this.audio = { ctx, master, music, musicFilter, sfx, step: 0, timer: null };
       this.audioReady = true;
       this.updateAudioButton();
     }
@@ -1303,7 +1308,7 @@
       if (!this.audioReady || !this.audioEnabled) return;
       if (this.audio.ctx.state === "suspended") this.audio.ctx.resume();
       if (!this.audio.timer) {
-        this.audio.timer = window.setInterval(() => this.playMusicStep(), 280);
+        this.audio.timer = window.setInterval(() => this.playMusicStep(), 180);
       }
       this.updateAudioButton();
     }
@@ -1312,7 +1317,7 @@
       this.audioEnabled = !this.audioEnabled;
       this.initAudio();
       if (this.audioReady) {
-        this.audio.master.gain.value = this.audioEnabled ? 0.5 : 0;
+        this.audio.master.gain.value = this.audioEnabled ? 0.82 : 0;
         if (this.audioEnabled) this.resumeAudio();
       }
       this.updateAudioButton();
@@ -1326,28 +1331,102 @@
     playMusicStep() {
       if (!this.audioReady || !this.audioEnabled || this.state === "paused") return;
       const ctx = this.audio.ctx;
-      const scale = [392, 440, 523.25, 587.33, 659.25, 783.99];
-      const bass = [196, 220, 261.63, 293.66];
       const now = ctx.currentTime;
-      const note = scale[(this.audio.step + Math.floor(this.player.level / 2)) % scale.length];
-      const bassNote = bass[Math.floor(this.audio.step / 4) % bass.length];
-      this.tone(note, now, 0.18, "triangle", this.audio.music, 0.08);
-      if (this.audio.step % 4 === 0) this.tone(bassNote, now, 0.34, "sine", this.audio.music, 0.05);
-      if (this.combo >= 3 && this.audio.step % 2 === 0) this.tone(note * 1.5, now + 0.05, 0.1, "sine", this.audio.music, 0.045);
+      const step = this.audio.step;
+      const intensity = Math.min(3, Math.floor(this.player.level / 3) + Math.floor(this.combo / 3) + (this.isEffectActive("staff") ? 1 : 0));
+      const scale = [293.66, 329.63, 392, 440, 493.88, 587.33, 659.25, 783.99];
+      const motifs = [
+        [2, null, 3, 4, 5, null, 4, 3, 2, 0, 2, 3, 4, null, 3, 2],
+        [4, null, 5, 7, 6, 5, null, 4, 3, null, 4, 5, 7, 5, 4, null],
+        [0, 2, 3, null, 4, 5, 7, null, 5, 4, 3, 2, 3, null, 2, 0],
+        [5, 7, null, 5, 4, 3, 4, null, 2, 3, 4, 5, 7, null, 6, 5],
+      ];
+      const bassline = [146.83, 146.83, 196, 196, 220, 220, 174.61, 174.61];
+      const motif = motifs[(Math.floor(step / 16) + Math.floor(this.player.level / 2)) % motifs.length];
+      const degree = motif[step % 16];
+      const bassNote = bassline[Math.floor(step / 4) % bassline.length];
+      this.audio.musicFilter.frequency.setTargetAtTime(3800 + intensity * 520, now, 0.08);
+
+      if (step % 4 === 0) this.kick(now, 0.22 + intensity * 0.025);
+      if (step % 8 === 4) this.noiseHit(now, 0.1, this.audio.music, 0.13 + intensity * 0.018, "bandpass", 1350);
+      if (step % 2 === 1) this.noiseHit(now, 0.035, this.audio.music, 0.035 + intensity * 0.012, "highpass", 5200);
+
+      if (step % 4 === 0 || (intensity >= 2 && step % 4 === 2)) {
+        this.tone(bassNote, now, 0.28, "sine", this.audio.music, 0.115 + intensity * 0.014);
+        this.tone(bassNote * 2, now + 0.015, 0.16, "triangle", this.audio.music, 0.035);
+      }
+
+      if (degree !== null) {
+        const note = scale[degree % scale.length] * (degree >= scale.length ? 2 : 1);
+        this.tone(note, now, 0.15, step % 8 === 0 ? "square" : "triangle", this.audio.music, 0.14 + intensity * 0.018);
+        if (step % 4 === 1 || intensity >= 2) {
+          this.tone(note * 1.5, now + 0.035, 0.11, "sine", this.audio.music, 0.055 + intensity * 0.01);
+        }
+        if (this.combo >= 3 && step % 2 === 0) {
+          this.tone(note * 2, now + 0.075, 0.09, "triangle", this.audio.music, 0.065);
+        }
+      }
+
+      if (this.isEffectActive("cloud") && step % 4 === 3) this.tone(987.77, now, 0.07, "sine", this.audio.music, 0.08);
+      if (this.isEffectActive("dash") && step % 2 === 0) this.tone(1174.66, now, 0.05, "sawtooth", this.audio.music, 0.055);
       this.audio.step = (this.audio.step + 1) % 32;
     }
 
     playSfx(kind) {
       if (!this.audioReady || !this.audioEnabled) return;
       const now = this.audio.ctx.currentTime;
-      if (kind === "eat") this.tone(640 + this.combo * 28, now, 0.11, "square", this.audio.sfx, 0.08);
-      else if (kind === "hurt") this.tone(110, now, 0.22, "sawtooth", this.audio.sfx, 0.11);
-      else if (kind === "powerup") this.tone(880, now, 0.16, "triangle", this.audio.sfx, 0.09);
-      else if (kind === "level") {
-        this.tone(523.25, now, 0.13, "triangle", this.audio.sfx, 0.09);
-        this.tone(783.99, now + 0.08, 0.16, "triangle", this.audio.sfx, 0.08);
-      } else if (kind === "dash") this.tone(420, now, 0.08, "sawtooth", this.audio.sfx, 0.07);
-      else if (kind === "orb") this.tone(760, now, 0.05, "sine", this.audio.sfx, 0.04);
+      if (kind === "eat") {
+        this.tone(680 + this.combo * 34, now, 0.1, "square", this.audio.sfx, 0.13);
+        this.tone(1020 + this.combo * 22, now + 0.04, 0.08, "triangle", this.audio.sfx, 0.075);
+      } else if (kind === "hurt") {
+        this.tone(120, now, 0.25, "sawtooth", this.audio.sfx, 0.18);
+        this.noiseHit(now, 0.18, this.audio.sfx, 0.11, "lowpass", 700);
+      } else if (kind === "powerup") {
+        this.tone(880, now, 0.14, "triangle", this.audio.sfx, 0.13);
+        this.tone(1320, now + 0.075, 0.14, "sine", this.audio.sfx, 0.085);
+      } else if (kind === "level") {
+        this.tone(523.25, now, 0.12, "triangle", this.audio.sfx, 0.13);
+        this.tone(659.25, now + 0.07, 0.13, "triangle", this.audio.sfx, 0.11);
+        this.tone(987.77, now + 0.15, 0.18, "triangle", this.audio.sfx, 0.1);
+      } else if (kind === "dash") {
+        this.tone(440, now, 0.08, "sawtooth", this.audio.sfx, 0.12);
+        this.tone(880, now + 0.035, 0.08, "sawtooth", this.audio.sfx, 0.085);
+      } else if (kind === "orb") this.tone(820, now, 0.05, "sine", this.audio.sfx, 0.065);
+    }
+
+    kick(start, volume) {
+      const ctx = this.audio.ctx;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(132, start);
+      osc.frequency.exponentialRampToValueAtTime(48, start + 0.16);
+      gain.gain.setValueAtTime(Math.max(0.0002, volume), start);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.18);
+      osc.connect(gain);
+      gain.connect(this.audio.music);
+      osc.start(start);
+      osc.stop(start + 0.2);
+    }
+
+    noiseHit(start, duration, output, volume, filterType, frequency) {
+      const ctx = this.audio.ctx;
+      const buffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * duration)), ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i += 1) data[i] = this.rng.between(-1, 1) * (1 - i / data.length);
+      const source = ctx.createBufferSource();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+      source.buffer = buffer;
+      filter.type = filterType;
+      filter.frequency.value = frequency;
+      filter.Q.value = filterType === "bandpass" ? 1.4 : 0.5;
+      gain.gain.setValueAtTime(Math.max(0.0002, volume), start);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(output);
+      source.start(start);
     }
 
     tone(frequency, start, duration, type, output, volume) {
@@ -1404,6 +1483,15 @@
         mission: this.mission ? { id: this.mission.id, progress: this.mission.progress, target: this.mission.target } : null,
         dashReady: this.time.now >= this.dashReadyAt,
         audioEnabled: this.audioEnabled,
+        audioReady: this.audioReady,
+        audioMix: this.audioReady
+          ? {
+              master: Number(this.audio.master.gain.value.toFixed(2)),
+              music: Number(this.audio.music.gain.value.toFixed(2)),
+              sfx: Number(this.audio.sfx.gain.value.toFixed(2)),
+              stepMs: 180,
+            }
+          : null,
         effects: { ...this.effects },
         player: { x: Math.round(this.player.sprite.x), y: Math.round(this.player.sprite.y) },
       };
